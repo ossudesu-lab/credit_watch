@@ -1,0 +1,61 @@
+{
+  "_説明": "JS版とPython版の記録係が、同じ入力から同じコマンドを作ることを確かめる共通の答え。両方のテストがこのファイルを読む。",
+  "cases": [
+    {
+      "name": "ふつうの1回",
+      "project": "kaigo_matching",
+      "purpose": "prod",
+      "model": "claude-haiku-4-5",
+      "now": "2026-09-23T03:00:00Z",
+      "usage": { "input_tokens": 1200, "output_tokens": 340 },
+      "commands": [
+        ["HINCRBY", "cw:day:2026-09-23", "kaigo_matching|prod|claude-haiku-4-5|in", 1200],
+        ["HINCRBY", "cw:day:2026-09-23", "kaigo_matching|prod|claude-haiku-4-5|out", 340],
+        ["HINCRBY", "cw:day:2026-09-23", "kaigo_matching|prod|claude-haiku-4-5|calls", 1]
+      ]
+    },
+    {
+      "name": "キャッシュあり。0の種類は送らない",
+      "project": "kaigo_mcp",
+      "purpose": "eval",
+      "model": "claude-sonnet-5",
+      "now": "2026-09-23T03:00:00Z",
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 900
+      },
+      "commands": [
+        ["HINCRBY", "cw:day:2026-09-23", "kaigo_mcp|eval|claude-sonnet-5|in", 10],
+        ["HINCRBY", "cw:day:2026-09-23", "kaigo_mcp|eval|claude-sonnet-5|cache_r", 900],
+        ["HINCRBY", "cw:day:2026-09-23", "kaigo_mcp|eval|claude-sonnet-5|calls", 1]
+      ]
+    },
+    {
+      "name": "日本時間で日付を切る（UTC 15:30 は翌日 0:30）",
+      "project": "p",
+      "purpose": "eval",
+      "model": "claude-haiku-4-5",
+      "now": "2026-09-23T15:30:00Z",
+      "usage": { "input_tokens": 1, "output_tokens": 1 },
+      "commands": [
+        ["HINCRBY", "cw:day:2026-09-24", "p|eval|claude-haiku-4-5|in", 1],
+        ["HINCRBY", "cw:day:2026-09-24", "p|eval|claude-haiku-4-5|out", 1],
+        ["HINCRBY", "cw:day:2026-09-24", "p|eval|claude-haiku-4-5|calls", 1]
+      ]
+    },
+    {
+      "name": "ラベルに区切り文字が入っていても列がずれない",
+      "project": "a|b",
+      "purpose": "eval",
+      "model": "claude-haiku-4-5",
+      "now": "2026-09-23T03:00:00Z",
+      "usage": { "input_tokens": 5 },
+      "commands": [
+        ["HINCRBY", "cw:day:2026-09-23", "a_b|eval|claude-haiku-4-5|in", 5],
+        ["HINCRBY", "cw:day:2026-09-23", "a_b|eval|claude-haiku-4-5|calls", 1]
+      ]
+    }
+  ]
+}

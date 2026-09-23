@@ -1,0 +1,8 @@
+{
+  "name": "credit_watch",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test recorder/*.test.js"
+  }
+}
