@@ -15,8 +15,8 @@ import recorder  # noqa: E402
 CASES = json.loads((ROOT / "recorder" / "cases.json").read_text(encoding="utf-8"))["cases"]
 
 ENV = {
-    "CW_REDIS_URL": "https://example.upstash.io/",
-    "CW_REDIS_TOKEN": "SECRET-TOKEN",
+    "KV_REST_API_URL": "https://example.upstash.io/",
+    "KV_REST_API_TOKEN": "SECRET-TOKEN",
     "CW_PROJECT": "kaigo_mcp",
     "CW_PURPOSE": "eval",
 }

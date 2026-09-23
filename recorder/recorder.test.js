@@ -7,8 +7,8 @@ import { buildCommands, recordUsage } from "./recorder.js";
 const { cases } = JSON.parse(readFileSync(new URL("./cases.json", import.meta.url), "utf8"));
 
 const ENV = {
-  CW_REDIS_URL: "https://example.upstash.io/",
-  CW_REDIS_TOKEN: "SECRET-TOKEN",
+  KV_REST_API_URL: "https://example.upstash.io/",
+  KV_REST_API_TOKEN: "SECRET-TOKEN",
   CW_PROJECT: "kaigo_matching",
   CW_PURPOSE: "prod",
 };

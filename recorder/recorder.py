@@ -74,7 +74,7 @@ def record_usage(
     """記録する。失敗しても例外は投げない。"""
     try:
         env = os.environ if env is None else env
-        url, token = env.get("CW_REDIS_URL"), env.get("CW_REDIS_TOKEN")
+        url, token = env.get("KV_REST_API_URL"), env.get("KV_REST_API_TOKEN")
         project, purpose = env.get("CW_PROJECT"), env.get("CW_PURPOSE")
         if not (url and token and project and purpose and usage is not None):
             return

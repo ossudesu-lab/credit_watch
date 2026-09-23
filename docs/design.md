@@ -64,7 +64,7 @@ Upstash は **HTTP で叩ける**ので、記録係は SDK を入れずに標準
    - 1.5秒で打ち切る（Upstash が遅いときに本番を道連れにしない）
    - Vercel では `waitUntil` で書き込みを応答の後ろに回す（応答を待たせず、途中で打ち切られもしない）
 2. **設定が無ければ何もしない**
-   - `CW_REDIS_URL` などの環境変数が無いときは黙って素通り。手元で試すときや、他人が clone したときに壊れない
+   - `KV_REST_API_URL` などの環境変数が無いときは黙って素通り。手元で試すときや、他人が clone したときに壊れない
 3. **用途（本番 / eval）は環境変数で決める**
    - Vercel には `CW_PURPOSE=prod`、eval の実行環境には `CW_PURPOSE=eval`
    - コードの中で「どこから呼ばれたか」を推測しない
@@ -83,10 +83,14 @@ Upstash は **HTTP で叩ける**ので、記録係は SDK を入れずに標準
 
 | 名前 | 置き場所 | 中身 |
 | --- | --- | --- |
-| `CW_REDIS_URL` / `CW_REDIS_TOKEN` | Secrets（各プロジェクトと credit_watch） | Upstash の接続先と鍵 |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Secrets（各プロジェクトと credit_watch） | Upstash の接続先と鍵 |
 | `CW_SMTP_USER` / `CW_SMTP_PASS` | Secrets（credit_watch のみ） | Gmail のアドレスとアプリパスワード |
 | `CW_DEPOSIT_USD` / `CW_DEPOSIT_DATE` | Variables（credit_watch のみ） | 入金額と入金日。残高 = 入金額 − 入金日以降の使用額 |
 | `CW_USD_JPY` | Variables | 表示用の固定レート |
+
+接続先と鍵の名前は、Vercel の Upstash 連携が自動で作る名前（`KV_REST_API_URL` / `KV_REST_API_TOKEN`）に合わせた。
+独自の名前にすると Vercel 上で値を手でコピーすることになり、鍵を作り直したときに古い値が残る。
+連携が作る残り3つ（`KV_URL` `REDIS_URL` `KV_REST_API_READ_ONLY_TOKEN`）は使わないが、連携の管理下なので消さない。
 
 入金額は秘密ではないが、リポジトリに書くと入金のたびにコミットが要るので Variables に置く。
 

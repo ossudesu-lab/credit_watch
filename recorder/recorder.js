@@ -45,7 +45,7 @@ export function buildCommands(project, purpose, model, usage, now) {
 // Vercel では応答を返すと処理が打ち切られることがあるので、呼び出し側で waitUntil に渡すこと。
 export async function recordUsage(model, usage, { env = process.env, fetchImpl = fetch, now = new Date() } = {}) {
   try {
-    const { CW_REDIS_URL: url, CW_REDIS_TOKEN: token, CW_PROJECT: project, CW_PURPOSE: purpose } = env;
+    const { KV_REST_API_URL: url, KV_REST_API_TOKEN: token, CW_PROJECT: project, CW_PURPOSE: purpose } = env;
     if (!url || !token || !project || !purpose || !usage) return;
 
     const ctrl = new AbortController();
