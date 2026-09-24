@@ -63,27 +63,41 @@ def run(now: datetime, store, sender, cfg: Config, prices, dry_run: bool = False
     return len(notices)
 
 
+def _safe_hint(e: Exception, config_error, urllib_error) -> str:
+    """公開ログに出しても安全な手がかりだけを返す。"""
+    if isinstance(e, config_error):
+        return f"（{e}）"  # 自分で書いた文面で、鍵やURLは入っていない
+    if isinstance(e, KeyError):
+        return f"（設定 {e} が無い）"  # 変数の名前だけ
+    if isinstance(e, urllib_error.HTTPError):
+        return f"（HTTP {e.code}）"
+    if isinstance(e, urllib_error.URLError):
+        return "（Upstash に接続できない。KV_REST_API_URL の値を確認）"
+    return ""
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args(argv)
     env = os.environ
 
-    from .store import Store  # テストで main を読むときにネットワークの準備をしないよう、ここで読む
+    import urllib.error
 
-    store = Store(env["KV_REST_API_URL"], env["KV_REST_API_TOKEN"])
-    if args.dry_run:
-        sender = PrintSender()
-    else:
-        user = env["CW_SMTP_USER"]
-        sender = GmailSender(user, env["CW_SMTP_PASS"], env.get("CW_MAIL_TO") or user)
+    from .store import ConfigError, Store  # テストで main を読むときにネットワークの準備をしないよう、ここで読む
 
     try:
+        store = Store(env["KV_REST_API_URL"], env["KV_REST_API_TOKEN"])
+        if args.dry_run:
+            sender = PrintSender()
+        else:
+            user = env["CW_SMTP_USER"]
+            sender = GmailSender(user, env["CW_SMTP_PASS"], env.get("CW_MAIL_TO") or user)
         sent = run(datetime.now(JST), store, sender, load_config(env), load_prices(), dry_run=args.dry_run)
     except Exception as e:
-        # 例外の文面やトレースバックは公開ログに出さない（応答の中身が混ざりうるため）。
-        # 種類だけ出して失敗で終わる。原因の調査は手元で --dry-run を使う
-        print(f"見張り失敗: {type(e).__name__}", file=sys.stderr)
+        # 例外の文面やトレースバックは基本的に公開ログに出さない（応答の中身が混ざりうるため）。
+        # 出してよいと分かっているものだけ、手がかりとして添える
+        print(f"見張り失敗: {type(e).__name__}{_safe_hint(e, ConfigError, urllib.error)}", file=sys.stderr)
         return 1
     print(f"見張り完了: 通知 {sent} 件")
     return 0

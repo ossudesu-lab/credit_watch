@@ -14,8 +14,23 @@ from typing import Any
 TIMEOUT_SEC = 10
 
 
+class ConfigError(Exception):
+    """設定の誤り。文面に鍵やURLそのものは入れない（公開ログにそのまま出すため）。"""
+
+
+def check_url(url: str) -> None:
+    """よくある入れ間違いを、中身を出さずに言い当てる。"""
+    if url != url.strip() or url.strip("'\"") != url:
+        raise ConfigError("KV_REST_API_URL の前後に空白・改行・引用符が入っている")
+    if url.startswith(("redis://", "rediss://")):
+        raise ConfigError("KV_REST_API_URL に KV_URL / REDIS_URL（redis:// 形式）の値が入っている")
+    if not url.startswith("https://"):
+        raise ConfigError("KV_REST_API_URL が https:// で始まっていない")
+
+
 class Store:
     def __init__(self, url: str, token: str):
+        check_url(url)
         self._url = url.rstrip("/") + "/pipeline"
         self._token = token
 

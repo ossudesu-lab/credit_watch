@@ -98,5 +98,51 @@ class TestDateRange(unittest.TestCase):
         self.assertEqual(date_range(date(2026, 9, 3), date(2026, 9, 1)), [])
 
 
+class TestFailureLog(unittest.TestCase):
+    """見張り番が失敗したときのログ。公開ログなので、手がかりは出すが鍵やURLは出さない。"""
+
+    def _run(self, env):
+        import contextlib
+        import io
+        import os
+        from unittest import mock
+
+        from watcher.main import main
+
+        err = io.StringIO()
+        with mock.patch.dict(os.environ, env, clear=True), contextlib.redirect_stderr(err):
+            code = main(["--dry-run"])
+        return code, err.getvalue()
+
+    BASE = {
+        "KV_REST_API_TOKEN": "SECRET-TOKEN",
+        "CW_DEPOSIT_USD": "5",
+        "CW_DEPOSIT_DATE": "2026-09-01",
+    }
+
+    def test_redis形式のURLを入れ間違えたら言い当てる(self):
+        code, log = self._run({**self.BASE, "KV_REST_API_URL": "rediss://default:SECRET@x.upstash.io:6379"})
+        self.assertEqual(code, 1)
+        self.assertIn("redis:// 形式", log)
+        self.assertNotIn("SECRET", log)
+        self.assertNotIn("upstash.io", log)
+
+    def test_前後の空白や引用符を言い当てる(self):
+        for bad in ["https://x.upstash.io\n", ' https://x.upstash.io', '"https://x.upstash.io"']:
+            with self.subTest(bad=repr(bad)):
+                code, log = self._run({**self.BASE, "KV_REST_API_URL": bad})
+                self.assertIn("空白・改行・引用符", log)
+                self.assertNotIn("upstash.io", log)
+
+    def test_httpsで始まらなければ言い当てる(self):
+        code, log = self._run({**self.BASE, "KV_REST_API_URL": "x.upstash.io"})
+        self.assertIn("https:// で始まっていない", log)
+
+    def test_設定が無ければ名前だけ出す(self):
+        code, log = self._run({"KV_REST_API_URL": "https://x.upstash.io"})
+        self.assertEqual(code, 1)
+        self.assertIn("KV_REST_API_TOKEN", log)
+
+
 if __name__ == "__main__":
     unittest.main()
