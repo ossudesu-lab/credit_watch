@@ -1,0 +1,56 @@
+name: watch
+
+# 見張り番。1時間おきに Upstash の記録を読み、条件に当たればメールを送る。
+#
+# このリポジトリは公開なので、Actions のログは誰でも読める。
+# 見張り番は本番の実行で金額も内訳も出さない（watcher/main.py）。ここでも env を echo しないこと。
+#
+# 公開リポジトリは60日間動きがないと定時実行が自動で止まる。
+# 週末の週報が届かなければ止まっている、という運用で気づく（docs/requirements.md）。
+
+on:
+  schedule:
+    # 毎時7分。00分ちょうどは GitHub 全体で混み、遅れやすいため
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "送らずにログへ出す（金額がログに出るので注意）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 依存はない（標準ライブラリだけ）ので pip install は不要
+      - name: 見張る
+        env:
+          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
+          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
+          CW_SMTP_USER: ${{ secrets.CW_SMTP_USER }}
+          CW_SMTP_PASS: ${{ secrets.CW_SMTP_PASS }}
+          CW_MAIL_TO: ${{ secrets.CW_MAIL_TO }}
+          CW_DEPOSIT_USD: ${{ vars.CW_DEPOSIT_USD }}
+          CW_DEPOSIT_DATE: ${{ vars.CW_DEPOSIT_DATE }}
+          CW_USD_JPY: ${{ vars.CW_USD_JPY }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python -m watcher.main --dry-run
+          else
+            python -m watcher.main
+          fi

@@ -94,7 +94,7 @@ def evaluate(
         notices.append(Notice(
             key=f"surge:{d}",
             ttl_seconds=2 * DAY,
-            subject=f"[credit_watch] 今日の使用額が {_money(today.total_usd, cfg)} を超えました",
+            subject=f"[credit_watch] 今日の使用額が {_money(today.total_usd, cfg)}を超えました",
             body=(
                 f"今日（{d}）の使用額: {_money(today.total_usd, cfg)}"
                 f"（しきい値 ${cfg.daily_limit_usd:.2f}）\n"
@@ -108,7 +108,7 @@ def evaluate(
         notices.append(Notice(
             key=f"low:{d}",
             ttl_seconds=2 * DAY,
-            subject=f"[credit_watch] 残りが {_money(remaining, cfg)} です",
+            subject=f"[credit_watch] 残りが {_money(remaining, cfg)}です",
             body=(
                 f"入金 ${cfg.deposit_usd:.2f}（{cfg.deposit_date}）のうち、"
                 f"{_money(since_deposit.total_usd, cfg)} を使いました。\n"
