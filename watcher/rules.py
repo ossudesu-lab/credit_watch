@@ -24,8 +24,8 @@ DAY = 24 * 60 * 60
 
 @dataclass
 class Config:
-    deposit_usd: float
-    deposit_date: date
+    base_balance_usd: float
+    base_date: date
     daily_limit_usd: float = 1.0
     low_balance_usd: float = 1.0
     usd_jpy: float = 150.0
@@ -60,6 +60,9 @@ def last_weekly_boundary(now: datetime, cfg: Config) -> datetime:
 
 
 def _money(usd: float, cfg: Config) -> str:
+    # 1セント未満を $0.00 と丸めると「使ったのに0円」と読めてしまう（2026-09-27 の週報で実際に起きた）
+    if 0 < usd < 0.01:
+        return f"${usd:.4f}（約{usd * cfg.usd_jpy:.1f}円）"
     return f"${usd:.2f}（約{usd * cfg.usd_jpy:,.0f}円）"
 
 
@@ -81,13 +84,13 @@ def _breakdown(s: Summary, cfg: Config) -> str:
 def evaluate(
     now: datetime,
     today: Summary,
-    since_deposit: Summary,
+    since_base: Summary,
     week: Summary,
     cfg: Config,
     notified: set[str],
 ) -> list[Notice]:
     d = jst_today(now)
-    remaining = cfg.deposit_usd - since_deposit.total_usd
+    remaining = cfg.base_balance_usd - since_base.total_usd
     notices: list[Notice] = []
 
     if today.total_usd > cfg.daily_limit_usd:
@@ -110,11 +113,11 @@ def evaluate(
             ttl_seconds=2 * DAY,
             subject=f"[credit_watch] 残りが {_money(remaining, cfg)}です",
             body=(
-                f"入金 ${cfg.deposit_usd:.2f}（{cfg.deposit_date}）のうち、"
-                f"{_money(since_deposit.total_usd, cfg)} を使いました。\n"
+                f"基準残高 ${cfg.base_balance_usd:.2f}（{cfg.base_date} 時点の Console の値）から、"
+                f"{_money(since_base.total_usd, cfg)} を使いました。\n"
                 f"残り（推定）: {_money(remaining, cfg)}\n"
                 f"正確な残高は Console で確認してください。"
-                f"{_unknown_note(since_deposit)}"
+                f"{_unknown_note(since_base)}"
             ),
         ))
 

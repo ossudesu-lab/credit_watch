@@ -27,8 +27,8 @@ def date_range(start: date, end: date) -> list[str]:
 
 def load_config(env) -> Config:
     return Config(
-        deposit_usd=float(env["CW_DEPOSIT_USD"]),
-        deposit_date=date.fromisoformat(env["CW_DEPOSIT_DATE"]),
+        base_balance_usd=float(env["CW_BASE_BALANCE_USD"]),
+        base_date=date.fromisoformat(env["CW_BASE_DATE"]),
         usd_jpy=float(env.get("CW_USD_JPY") or 150),
     )
 
@@ -41,8 +41,8 @@ def run(now: datetime, store, sender, cfg: Config, prices, dry_run: bool = False
     today = jst_today(now)
     week_end = last_weekly_boundary(now, cfg).date()
 
-    # 入金日からの分はまとめて読み、今日と週の分はそこから切り出す（読み込みを1回で済ませる）
-    first = min(cfg.deposit_date, week_end - timedelta(days=6))
+    # 基準日からの分はまとめて読み、今日と週の分はそこから切り出す（読み込みを1回で済ませる）
+    first = min(cfg.base_date, week_end - timedelta(days=6))
     all_dates = date_range(first, today)
     by_date = dict(zip(all_dates, store.read_days(all_dates)))
 
@@ -50,7 +50,7 @@ def run(now: datetime, store, sender, cfg: Config, prices, dry_run: bool = False
         return [by_date[d] for d in date_range(start, end) if d in by_date]
 
     s_today = summarize(pick(today, today), prices)
-    s_since = summarize(pick(cfg.deposit_date, today), prices)
+    s_since = summarize(pick(cfg.base_date, today), prices)
     s_week = summarize(pick(week_end - timedelta(days=6), week_end), prices)
 
     candidates = [f"surge:{today}", f"low:{today}", f"anomaly:{today}", f"weekly:{week_end}"]

@@ -6,7 +6,7 @@ from watcher.rules import JST, Config, evaluate, last_weekly_boundary
 
 PRICES = {"claude-haiku-4-5": {"in": 1.0, "out": 5.0, "cache_w": 1.25, "cache_r": 0.10}}
 
-CFG = Config(deposit_usd=5.0, deposit_date=date(2026, 9, 1))
+CFG = Config(base_balance_usd=5.0, base_date=date(2026, 9, 1))
 
 # 2026-09-23 は水曜日
 WED_NOON = datetime(2026, 9, 23, 12, 0, tzinfo=JST)
@@ -114,6 +114,18 @@ class TestWeekly(unittest.TestCase):
         # 週報は生存確認を兼ねるので、0ドルでも止めない
         n = evaluate(WED_NOON, EMPTY, EMPTY, EMPTY, CFG, set())
         self.assertIn("記録なし", n[0].body)
+
+
+class TestMoney(unittest.TestCase):
+    def test_1セント未満は0ドルと丸めない(self):
+        # 2026-09-27 の週報で、本番1回ぶん（$0.0023）が「$0.00（約0円）」と出た
+        n = evaluate(WED_NOON, EMPTY, EMPTY, usd(0.0023, purpose="prod"), CFG, set())
+        self.assertIn("$0.0023（約0.3円）", n[0].body)
+        self.assertNotIn("$0.00（", n[0].body)
+
+    def test_0ドルはそのまま(self):
+        n = evaluate(WED_NOON, EMPTY, EMPTY, EMPTY, CFG, set())
+        self.assertIn("$0.00（約0円）", n[0].subject)
 
 
 if __name__ == "__main__":

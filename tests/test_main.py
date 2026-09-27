@@ -5,7 +5,7 @@ from watcher.main import date_range, run
 from watcher.rules import JST, Config
 
 PRICES = {"claude-haiku-4-5": {"in": 1.0, "out": 5.0, "cache_w": 1.25, "cache_r": 0.10}}
-CFG = Config(deposit_usd=5.0, deposit_date=date(2026, 9, 20))
+CFG = Config(base_balance_usd=5.0, base_date=date(2026, 9, 20))
 WED_NOON = datetime(2026, 9, 23, 12, 0, tzinfo=JST)
 
 
@@ -64,16 +64,16 @@ class TestRun(unittest.TestCase):
         self.assertEqual(len(sender.sent), 2)
         self.assertEqual(store.marks, {})
 
-    def test_残高は入金日から今日までで出す(self):
-        # 入金日より前の使用は数えない
+    def test_残高は基準日から今日までで出す(self):
+        # 基準日より前の使用は数えない（基準残高に既に反映されているため）
         store = FakeStore({
-            "2026-09-19": usd(3.0),  # 入金前
+            "2026-09-19": usd(3.0),  # 基準日より前
             "2026-09-21": usd(2.0),
             "2026-09-22": usd(2.5),
         }, notified={"weekly:2026-09-20"})
         sender = FakeSender()
         run(WED_NOON, store, sender, CFG, PRICES)
-        # 5.0 - (2.0 + 2.5) = 0.5 → 残り少。入金前の3.0も数えると負になり件名が変わる
+        # 5.0 - (2.0 + 2.5) = 0.5 → 残り少。基準日より前の3.0も数えると負になり件名が変わる
         self.assertEqual(sender.sent, ["[credit_watch] 残りが $0.50（約75円）です"])
 
     def test_週報は直前の日曜までの7日間(self):
@@ -116,8 +116,8 @@ class TestFailureLog(unittest.TestCase):
 
     BASE = {
         "KV_REST_API_TOKEN": "SECRET-TOKEN",
-        "CW_DEPOSIT_USD": "5",
-        "CW_DEPOSIT_DATE": "2026-09-01",
+        "CW_BASE_BALANCE_USD": "5",
+        "CW_BASE_DATE": "2026-09-01",
     }
 
     def test_redis形式のURLを入れ間違えたら言い当てる(self):

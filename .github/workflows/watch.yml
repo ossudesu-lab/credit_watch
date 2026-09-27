@@ -45,8 +45,8 @@ jobs:
           CW_SMTP_USER: ${{ secrets.CW_SMTP_USER }}
           CW_SMTP_PASS: ${{ secrets.CW_SMTP_PASS }}
           CW_MAIL_TO: ${{ secrets.CW_MAIL_TO }}
-          CW_DEPOSIT_USD: ${{ vars.CW_DEPOSIT_USD }}
-          CW_DEPOSIT_DATE: ${{ vars.CW_DEPOSIT_DATE }}
+          CW_BASE_BALANCE_USD: ${{ vars.CW_BASE_BALANCE_USD }}
+          CW_BASE_DATE: ${{ vars.CW_BASE_DATE }}
           CW_USD_JPY: ${{ vars.CW_USD_JPY }}
         run: |
           if [ "${{ inputs.dry_run }}" = "true" ]; then
