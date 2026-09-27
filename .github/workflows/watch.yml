@@ -11,6 +11,7 @@ name: watch
 on:
   schedule:
     # 毎時7分。00分ちょうどは GitHub 全体で混み、遅れやすいため
+    # ただし GitHub は定時実行を間引くので、実際は3〜6時間おきになる（2026-09-27 の実績）
     - cron: "7 * * * *"
   workflow_dispatch:
     inputs:
